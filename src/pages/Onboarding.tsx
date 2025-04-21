@@ -61,32 +61,24 @@ const Onboarding = () => {
         throw new Error("No authenticated user found");
       }
       
-      // Upload logo if exists
-      let logoPath = null;
-      if (formData.logoFile) {
-        const fileName = `store-logos/${user.id}-${Date.now()}-${formData.logoFile.name}`;
-        const { error: uploadError, data } = await supabase.storage
-          .from("store-assets")
-          .upload(fileName, formData.logoFile);
-          
-        if (uploadError) throw uploadError;
-        logoPath = data.path;
-      }
-      
-      // Create store profile
-      const { error } = await supabase.from("stores").insert({
-        owner_id: user.id,
-        name: formData.storeName,
-        description: formData.storeDescription,
-        category: formData.storeCategory,
-        logo_url: logoPath,
+      // Since we only have a Rabih table for now, we'll store the store details there
+      // Note: This is a temporary solution until proper tables are created
+      const { error } = await supabase.from("Rabih").insert({
+        content: JSON.stringify({
+          name: formData.storeName,
+          description: formData.storeDescription,
+          category: formData.storeCategory,
+          userId: user.id,
+          // If there was a logo, we'd handle it differently, for now we'll just note it
+          hasLogo: !!formData.logoFile
+        })
       });
       
       if (error) throw error;
       
       toast({
         title: "Setup complete!",
-        description: "Your store has been created successfully.",
+        description: "Your store information has been saved successfully.",
       });
       navigate("/dashboard");
     } catch (error: any) {
