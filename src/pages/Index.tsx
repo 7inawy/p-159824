@@ -1,3 +1,4 @@
+
 import React from "react";
 import Header from "@/components/landing/Header";
 import Hero from "@/components/landing/Hero";
@@ -14,9 +15,9 @@ import Footer from "@/components/landing/Footer";
 
 const Index: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-white" dir="rtl">
+    <div className="flex flex-col min-h-screen bg-white w-full overflow-x-hidden" dir="rtl">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full">
         <Hero />
         <WhyChooseUs />
         <Steps />

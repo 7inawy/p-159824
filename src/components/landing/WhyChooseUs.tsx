@@ -1,3 +1,4 @@
+
 import React from "react";
 import FeatureCard from "@/components/ui/feature-card";
 
@@ -36,23 +37,23 @@ const WhyChooseUs: React.FC = () => {
   return (
     <section
       id="why-choose-us"
-      className="bg-[rgba(249,116,21,0.03)] flex min-h-[690px] flex-col overflow-hidden items-stretch justify-center mt-[26px] px-[150px] py-[81px] max-md:max-w-full max-md:px-5"
+      className="bg-[rgba(249,116,21,0.03)] flex min-h-[690px] flex-col items-stretch justify-center mt-[26px] px-4 md:px-8 lg:px-[150px] py-[81px] w-full"
     >
-      <div className="flex w-full flex-col items-stretch max-md:max-w-full">
-        <div className="self-center flex w-[695px] max-w-full flex-col items-stretch text-right leading-none">
-          <div className="self-center w-[382px] max-w-full text-[50px] text-[#333] font-black pb-[9px] max-md:text-[40px]">
-            <h2 className="z-10 max-md:text-[40px] max-md:ml-[9px] max-md:mr-1.5">
+      <div className="flex w-full flex-col items-stretch">
+        <div className="self-center flex w-full max-w-[695px] flex-col items-stretch text-right leading-none">
+          <div className="self-center w-full max-w-[382px] text-[40px] md:text-[50px] text-[#333] font-black pb-[9px]">
+            <h2 className="z-10">
               ليه تختار منصتنا؟
             </h2>
             <div className="bg-[rgba(255,220,96,1)] flex shrink-0 h-[13px]" />
           </div>
-          <p className="text-[#767676] text-xl font-medium mt-4 max-md:max-w-full">
+          <p className="text-[#767676] text-xl font-medium mt-4">
             منصة مصرية بتخليك تطلق متجرك الإلكتروني في دقائق، من غير ما تحتاج
             خبرة تقنية
           </p>
         </div>
 
-        <div className="flex w-full items-center gap-[40px_98px] flex-wrap mt-[50px] max-md:max-w-full max-md:mt-10">
+        <div className="flex justify-center flex-wrap gap-8 mt-[50px]">
           {features.map((feature) => (
             <FeatureCard
               key={feature.id}
