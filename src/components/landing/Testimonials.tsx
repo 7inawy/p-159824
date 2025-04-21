@@ -1,3 +1,4 @@
+
 import React from "react";
 interface TestimonialProps {
   name?: string;
@@ -13,7 +14,8 @@ const Testimonial: React.FC<TestimonialProps> = ({
   content,
   imageSrc
 }) => {
-  return <div className="<!-- Parent Container -->\n<div class=\"w-full max-w-screen-xl mx-auto\"> <!-- Add width constraint -->\n  <!-- Flex Container -->\n  <div class=\"flex items-center gap-x-10 gap-y-12 flex-nowrap min-w-[800px]\">\n    <!-- Your Components Here -->\n  </div>\n</div>">
+  return (
+    <div className="flex items-center gap-x-10 gap-y-12 w-full max-w-screen-xl mx-auto">
       <p className="text-[#999] text-right text-lg font-medium leading-[18px] self-stretch w-[479px] my-auto max-md:max-w-full">
         {content}
       </p>
@@ -30,8 +32,10 @@ const Testimonial: React.FC<TestimonialProps> = ({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 const Testimonials: React.FC = () => {
   const testimonialContent = "لأننا مؤمنين إن مجتمعنا الطبي مليان مواهب، لم تُكتشف بعد.. قررنا إن أكاديميتنا تكسر الصندوق المجتمعي اللي اتحطينا فيه من زمان، وبمساعدة المتخصصين في مجالات الإرشاد المهني صممنا برامج معتمدة على الخلفية الطبية والمهارات والمواهب، هتأهلك تشتغل في مجالات موازية وكمان تدخلك دخل إضافي";
   return <section id="testimonials" className="flex min-h-[690px] flex-col overflow-hidden items-center justify-center mt-[15px] py-px max-md:max-w-full max-md:mr-[3px]">
