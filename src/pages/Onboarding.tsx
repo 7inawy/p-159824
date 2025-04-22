@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,24 +60,38 @@ const Onboarding = () => {
         throw new Error("No authenticated user found");
       }
       
-      // Since we only have a Rabih table for now, we'll store the store details there
-      // Note: This is a temporary solution until proper tables are created
-      const { error } = await supabase.from("Rabih").insert({
-        content: JSON.stringify({
-          name: formData.storeName,
-          description: formData.storeDescription,
-          category: formData.storeCategory,
-          userId: user.id,
-          // If there was a logo, we'd handle it differently, for now we'll just note it
-          hasLogo: !!formData.logoFile
-        })
+      // Upload logo if exists
+      let logoUrl = null;
+      if (formData.logoFile) {
+        const fileName = `${user.id}-${Date.now()}-${formData.logoFile.name}`;
+        const { error: uploadError, data } = await supabase.storage
+          .from("retailer-logos")
+          .upload(fileName, formData.logoFile);
+          
+        if (uploadError) throw uploadError;
+        
+        // Get the public URL for the uploaded logo
+        const { data: { publicUrl } } = supabase.storage
+          .from("retailer-logos")
+          .getPublicUrl(fileName);
+          
+        logoUrl = publicUrl;
+      }
+      
+      // Create retailer profile
+      const { error } = await supabase.from("retailers").insert({
+        user_id: user.id,
+        store_name: formData.storeName,
+        description: formData.storeDescription,
+        category: formData.storeCategory,
+        logo_url: logoUrl,
       });
       
       if (error) throw error;
       
       toast({
         title: "Setup complete!",
-        description: "Your store information has been saved successfully.",
+        description: "Your store has been created successfully.",
       });
       navigate("/dashboard");
     } catch (error: any) {
