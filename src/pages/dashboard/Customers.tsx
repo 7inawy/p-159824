@@ -1,33 +1,22 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Search, Filter, Plus, Loader2 } from "lucide-react";
+import { Users, Search, Filter, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useCustomers } from "@/hooks/useCustomers";
-import AddCustomerModal from "@/components/dashboard/customers/AddCustomerModal";
-import { formatDate } from "@/lib/utils";
 
 const Customers: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
-  const { 
-    customers, 
-    isLoading, 
-    error, 
-    fetchCustomers 
-  } = useCustomers();
-
-  const filteredCustomers = customers.filter(customer => 
-    (customer.name && customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (customer.phone && customer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
+  // Sample customers data
+  const customers = [
+    { id: "CUST1001", name: "أحمد علي", email: "ahmed@example.com", phone: "+966 50 123 4567", orders: 8, totalSpent: "٣,٢٠٠ ريال", lastOrder: "٢٠٢٥/٠٤/١٨" },
+    { id: "CUST1002", name: "محمد خالد", email: "mohamed@example.com", phone: "+966 55 234 5678", orders: 5, totalSpent: "١,٨٥٠ ريال", lastOrder: "٢٠٢٥/٠٤/١٥" },
+    { id: "CUST1003", name: "سارة محمد", email: "sara@example.com", phone: "+966 54 345 6789", orders: 12, totalSpent: "٥,٤٠٠ ريال", lastOrder: "٢٠٢٥/٠٤/٢٠" },
+    { id: "CUST1004", name: "فاطمة أحمد", email: "fatima@example.com", phone: "+966 56 456 7890", orders: 3, totalSpent: "١,١٠٠ ريال", lastOrder: "٢٠٢٥/٠٤/١٢" },
+    { id: "CUST1005", name: "خالد عمر", email: "khaled@example.com", phone: "+966 59 567 8901", orders: 7, totalSpent: "٢,٨٥٠ ريال", lastOrder: "٢٠٢٥/٠٤/١٩" },
+    { id: "CUST1006", name: "نورا سعيد", email: "noura@example.com", phone: "+966 58 678 9012", orders: 2, totalSpent: "٨٨٠ ريال", lastOrder: "٢٠٢٥/٠٤/٠٨" },
+    { id: "CUST1007", name: "علي محمود", email: "ali@example.com", phone: "+966 53 789 0123", orders: 4, totalSpent: "١,٦٥٠ ريال", lastOrder: "٢٠٢٥/٠٤/١٤" },
+    { id: "CUST1008", name: "مريم أحمد", email: "mariam@example.com", phone: "+966 51 890 1234", orders: 6, totalSpent: "٢,٣٠٠ ريال", lastOrder: "٢٠٢٥/٠٤/١٧" }
+  ];
 
   return (
     <div className="space-y-6">
@@ -36,10 +25,7 @@ const Customers: React.FC = () => {
           <Users className="w-6 h-6 text-[#F97415] mr-2" />
           <h1 className="text-2xl font-bold">العملاء</h1>
         </div>
-        <Button 
-          className="bg-[#F97415] hover:bg-[#F97415]/90"
-          onClick={() => setIsAddModalOpen(true)}
-        >
+        <Button className="bg-[#F97415] hover:bg-[#F97415]/90">
           <Plus className="w-4 h-4 mr-2" />
           إضافة عميل
         </Button>
@@ -54,8 +40,6 @@ const Customers: React.FC = () => {
               <Input 
                 placeholder="بحث عن عميل..." 
                 className="pl-3 pr-10"
-                value={searchTerm}
-                onChange={handleSearch}
               />
             </div>
             <div className="flex gap-2">
@@ -71,80 +55,33 @@ const Customers: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#F97415]" />
-          <span className="mr-2 text-lg">جاري تحميل العملاء...</span>
-        </div>
-      )}
-
-      {/* Error state */}
-      {error && !isLoading && (
-        <div className="bg-red-50 p-4 rounded-md text-red-800 text-center">
-          <p>{error}</p>
-          <Button 
-            variant="outline" 
-            className="mt-2" 
-            onClick={fetchCustomers}
-          >
-            إعادة المحاولة
-          </Button>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!isLoading && !error && customers.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-medium">لا يوجد عملاء</h3>
-          <p className="text-gray-500 mb-4">قم بإضافة عميل جديد لعرضه هنا</p>
-          <Button 
-            className="bg-[#F97415] hover:bg-[#F97415]/90"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            إضافة عميل جديد
-          </Button>
-        </div>
-      )}
-
       {/* Customers Table */}
-      {!isLoading && !error && filteredCustomers.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2 text-right text-sm font-semibold">العميل</th>
-                <th className="py-2 text-right text-sm font-semibold">البريد الإلكتروني</th>
-                <th className="py-2 text-right text-sm font-semibold">رقم الهاتف</th>
-                <th className="py-2 text-right text-sm font-semibold">عدد الطلبات</th>
-                <th className="py-2 text-right text-sm font-semibold">إجمالي المشتريات</th>
-                <th className="py-2 text-right text-sm font-semibold">آخر طلب</th>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="py-2 text-right text-sm font-semibold">العميل</th>
+              <th className="py-2 text-right text-sm font-semibold">البريد الإلكتروني</th>
+              <th className="py-2 text-right text-sm font-semibold">رقم الهاتف</th>
+              <th className="py-2 text-right text-sm font-semibold">عدد الطلبات</th>
+              <th className="py-2 text-right text-sm font-semibold">إجمالي المشتريات</th>
+              <th className="py-2 text-right text-sm font-semibold">آخر طلب</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map((customer) => (
+              <tr key={customer.id} className="hover:bg-gray-50 transition-colors cursor-pointer border-b">
+                <td className="py-3 text-sm font-medium">{customer.name}</td>
+                <td className="py-3 text-sm">{customer.email}</td>
+                <td className="py-3 text-sm">{customer.phone}</td>
+                <td className="py-3 text-sm">{customer.orders}</td>
+                <td className="py-3 text-sm font-semibold">{customer.totalSpent}</td>
+                <td className="py-3 text-sm">{customer.lastOrder}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50 transition-colors cursor-pointer border-b">
-                  <td className="py-3 text-sm font-medium">{customer.name || customer.email}</td>
-                  <td className="py-3 text-sm">{customer.email}</td>
-                  <td className="py-3 text-sm">{customer.phone || "-"}</td>
-                  <td className="py-3 text-sm">{customer.order_count}</td>
-                  <td className="py-3 text-sm font-semibold">{customer.total_spent} ريال</td>
-                  <td className="py-3 text-sm">{customer.last_order ? formatDate(customer.last_order) : "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Add Customer Modal */}
-      <AddCustomerModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)}
-        onCustomerAdded={fetchCustomers}
-      />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
