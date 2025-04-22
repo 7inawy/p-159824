@@ -69,7 +69,13 @@ export function usePOS() {
         throw error;
       }
       
-      setProducts(data || []);
+      // Add default status if it doesn't exist in the data
+      const productsWithStatus = data?.map(product => ({
+        ...product,
+        status: product.status || 'published'
+      })) || [];
+      
+      setProducts(productsWithStatus);
     } catch (err: any) {
       console.error("Error fetching products:", err);
       setError(err.message);

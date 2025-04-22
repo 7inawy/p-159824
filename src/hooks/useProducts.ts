@@ -14,6 +14,7 @@ export type Product = {
   status: string;
   created_at: string;
   retailer_id: string;
+  updated_at: string;
 };
 
 export function useProducts() {
@@ -55,7 +56,13 @@ export function useProducts() {
         throw error;
       }
       
-      setProducts(data || []);
+      // Add default status if it doesn't exist in the data
+      const productsWithStatus = data?.map(product => ({
+        ...product,
+        status: product.status || 'published'
+      })) || [];
+      
+      setProducts(productsWithStatus);
     } catch (err: any) {
       console.error("Error fetching products:", err);
       setError(err.message);
@@ -73,7 +80,7 @@ export function useProducts() {
     fetchProducts();
   }, []);
 
-  const addProduct = async (product: Omit<Product, 'id' | 'created_at'>) => {
+  const addProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error } = await supabase
         .from('products')
@@ -83,8 +90,14 @@ export function useProducts() {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setProducts(prevProducts => [data[0], ...prevProducts]);
-        return data[0];
+        // Ensure status is set
+        const newProduct: Product = {
+          ...data[0],
+          status: data[0].status || 'published'
+        };
+        
+        setProducts(prevProducts => [newProduct, ...prevProducts]);
+        return newProduct;
       }
     } catch (err: any) {
       console.error("Error adding product:", err);
@@ -108,12 +121,18 @@ export function useProducts() {
       if (error) throw error;
       
       if (data && data.length > 0) {
+        // Ensure status is set
+        const updatedProduct: Product = {
+          ...data[0],
+          status: data[0].status || 'published'
+        };
+        
         setProducts(prevProducts => 
           prevProducts.map(product => 
-            product.id === id ? { ...product, ...data[0] } : product
+            product.id === id ? updatedProduct : product
           )
         );
-        return data[0];
+        return updatedProduct;
       }
     } catch (err: any) {
       console.error("Error updating product:", err);
