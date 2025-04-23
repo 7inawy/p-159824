@@ -95,7 +95,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ open, onOpenChange }) 
       
       let image_url = null;
       
-      // Upload image if available
       if (image) {
         const fileExt = image.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
@@ -109,7 +108,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({ open, onOpenChange }) 
           throw new Error(uploadError.message);
         }
         
-        // Get public URL
         const { data: publicUrlData } = supabase.storage
           .from('products')
           .getPublicUrl(filePath);
@@ -117,21 +115,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({ open, onOpenChange }) 
         image_url = publicUrlData.publicUrl;
       }
       
-      // Prepare product data
+      // Ensure all required fields are included in productData
       const productData: Omit<Product, "id" | "created_at" | "updated_at"> = {
-        ...data,
+        name: data.name,
+        description: data.description || null,
+        price: data.price,
+        category: data.category,
+        stock: data.stock,
+        status: data.status,
         image_url,
-        retailer_id: null, // This would typically come from the authenticated user
+        retailer_id: null
       };
       
       await createProduct.mutateAsync(productData);
       
-      // Reset the form
       form.reset();
       setImage(null);
       setImagePreview(null);
-      
-      // Close the dialog
       onOpenChange(false);
       
       toast.success("تم إضافة المنتج بنجاح");
