@@ -38,7 +38,7 @@ export function useStoreCustomization(storeId: string) {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as StoreTheme;
     },
   });
 
@@ -53,7 +53,7 @@ export function useStoreCustomization(storeId: string) {
         .order("block_order", { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data as StoreBlock[];
     },
   });
 
@@ -79,18 +79,79 @@ export function useStoreCustomization(storeId: string) {
     },
   });
 
+  // Create a new block
+  const createBlock = useMutation({
+    mutationFn: async (newBlock: Omit<StoreBlock, 'id'>) => {
+      const { data, error } = await supabase
+        .from("store_blocks")
+        .insert([newBlock])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeBlocks", storeId] });
+      toast.success("تم إضافة العنصر بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في إضافة العنصر: ${error.message}`);
+    },
+  });
+
+  // Update a block
+  const updateBlock = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<StoreBlock> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("store_blocks")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeBlocks", storeId] });
+      toast.success("تم تحديث العنصر بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في تحديث العنصر: ${error.message}`);
+    },
+  });
+
+  // Delete a block
+  const deleteBlock = useMutation({
+    mutationFn: async (blockId: string) => {
+      const { error } = await supabase
+        .from("store_blocks")
+        .delete()
+        .eq("id", blockId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeBlocks", storeId] });
+      toast.success("تم حذف العنصر بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في حذف العنصر: ${error.message}`);
+    },
+  });
+
   // Update block order
   const updateBlockOrder = useMutation({
-    mutationFn: async (updatedBlocks: { id: string; block_order: number; block_type: string }[]) => {
-      // Prepare data for upsert with all required fields
+    mutationFn: async (updatedBlocks: StoreBlock[]) => {
+      // Create an array of objects for upsert
       const blocksToUpdate = updatedBlocks.map(block => ({
         id: block.id,
         block_order: block.block_order,
         block_type: block.block_type,
         store_id: storeId,
-        // Adding default values for other required fields if they're not present in existing data
-        content: {},
-        is_active: true
+        content: block.content || {},
+        is_active: block.is_active
       }));
 
       const { error } = await supabase
@@ -108,11 +169,25 @@ export function useStoreCustomization(storeId: string) {
     },
   });
 
+  // Update multiple blocks at once
+  const updateBlocks = useMutation({
+    mutationFn: async (updatedBlocks: StoreBlock[]) => {
+      return updateBlockOrder.mutateAsync(updatedBlocks);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeBlocks", storeId] });
+    }
+  });
+
   return {
     theme,
     blocks,
     isLoading: isThemeLoading || areBlocksLoading,
     updateTheme,
+    createBlock,
+    updateBlock,
+    deleteBlock,
     updateBlockOrder,
+    updateBlocks,
   };
 }

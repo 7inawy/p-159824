@@ -1,0 +1,61 @@
+
+import React from "react";
+import { StoreBlock } from "@/hooks/useStoreCustomization";
+import { HeroBlock } from "./blocks/HeroBlock";
+import { ProductGridBlock } from "./blocks/ProductGridBlock";
+import { TestimonialsBlock } from "./blocks/TestimonialsBlock";
+import { CategoryBannerBlock } from "./blocks/CategoryBannerBlock";
+import { NewsletterBlock } from "./blocks/NewsletterBlock";
+import { CustomHtmlBlock } from "./blocks/CustomHtmlBlock";
+import { VideoBlock } from "./blocks/VideoBlock";
+import { InstagramBlock } from "./blocks/InstagramBlock";
+
+interface BlockPreviewProps {
+  blocks: StoreBlock[];
+  theme?: any; // Optional theme prop for applying theme settings
+}
+
+export function BlockPreview({ blocks, theme }: BlockPreviewProps) {
+  const renderBlock = (block: StoreBlock) => {
+    if (!block.is_active) return null;
+
+    switch (block.block_type) {
+      case "hero":
+        return <HeroBlock key={block.id} content={block.content} theme={theme} />;
+      case "productGrid":
+        return <ProductGridBlock key={block.id} content={block.content} theme={theme} />;
+      case "testimonials":
+        return <TestimonialsBlock key={block.id} content={block.content} theme={theme} />;
+      case "categoryBanner":
+        return <CategoryBannerBlock key={block.id} content={block.content} theme={theme} />;
+      case "newsletter":
+        return <NewsletterBlock key={block.id} content={block.content} theme={theme} />;
+      case "customHtml":
+        return <CustomHtmlBlock key={block.id} content={block.content} theme={theme} />;
+      case "video":
+        return <VideoBlock key={block.id} content={block.content} theme={theme} />;
+      case "instagram":
+        return <InstagramBlock key={block.id} content={block.content} theme={theme} />;
+      default:
+        return (
+          <div key={block.id} className="p-4 border border-dashed text-center text-muted-foreground">
+            عنصر غير معروف: {block.block_type}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-6 overflow-hidden">
+      {blocks
+        .sort((a, b) => a.block_order - b.block_order)
+        .map((block) => renderBlock(block))}
+        
+      {blocks.length === 0 && (
+        <div className="p-16 border border-dashed rounded-md text-center text-muted-foreground">
+          المعاينة فارغة. قم بإضافة عناصر للمتجر لرؤيتها هنا.
+        </div>
+      )}
+    </div>
+  );
+}
