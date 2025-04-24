@@ -11,4 +11,5 @@ export interface Product {
   created_at: string | null;
   updated_at: string | null;
   status?: "published" | "draft"; // Added status field as optional
+  sku: string; // Added SKU property
 }

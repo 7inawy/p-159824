@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,10 +19,11 @@ export const useProducts = () => {
         throw new Error(error.message);
       }
 
-      // Add status field to each product (defaults to "published")
+      // Add status field and a default SKU if not present
       return data.map(product => ({ 
         ...product, 
-        status: "published" as "published" | "draft" 
+        status: "published" as "published" | "draft",
+        sku: product.sku || `PRD-${product.id.substring(0, 8).toUpperCase()}` 
       }));
     },
   });
@@ -33,7 +33,10 @@ export const useProducts = () => {
     mutationFn: async (newProduct: Omit<Product, "id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
         .from("products")
-        .insert([newProduct])
+        .insert([{
+          ...newProduct,
+          sku: newProduct.sku || `PRD-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+        }])
         .select()
         .single();
 
@@ -41,8 +44,12 @@ export const useProducts = () => {
         throw new Error(error.message);
       }
 
-      // Add status to the returned product
-      return { ...data, status: "published" as "published" | "draft" };
+      // Add status and SKU to the returned product
+      return { 
+        ...data, 
+        status: "published" as "published" | "draft",
+        sku: data.sku || `PRD-${data.id.substring(0, 8).toUpperCase()}`
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -59,11 +66,14 @@ export const useProducts = () => {
       const { id, ...rest } = updatedProduct;
       
       // Remove status field before sending to Supabase since it doesn't exist in the DB
-      const { status, ...dataToUpdate } = rest;
+      const { status, sku, ...dataToUpdate } = rest;
 
       const { data, error } = await supabase
         .from("products")
-        .update(dataToUpdate)
+        .update({
+          ...dataToUpdate,
+          sku: sku || `PRD-${id.substring(0, 8).toUpperCase()}`
+        })
         .eq("id", id)
         .select()
         .single();
@@ -72,8 +82,12 @@ export const useProducts = () => {
         throw new Error(error.message);
       }
 
-      // Add status to the returned product
-      return { ...data, status: status || "published" as "published" | "draft" };
+      // Add status and SKU to the returned product
+      return { 
+        ...data, 
+        status: status || "published" as "published" | "draft",
+        sku: data.sku || `PRD-${data.id.substring(0, 8).toUpperCase()}`
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
