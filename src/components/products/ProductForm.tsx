@@ -86,6 +86,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ open, onOpenChange }) 
         image_url = publicUrlData.publicUrl;
       }
       
+      // Generate a unique SKU if none exists
+      const sku = `PRD-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      
       const productData: Omit<Product, "id" | "created_at" | "updated_at"> = {
         name: data.name,
         description: data.description || null,
@@ -94,7 +97,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ open, onOpenChange }) 
         stock: data.stock,
         status: data.status,
         image_url,
-        retailer_id: null
+        retailer_id: null,
+        sku // Add the SKU property
       };
       
       await createProduct.mutateAsync(productData);

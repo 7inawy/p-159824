@@ -123,6 +123,7 @@ export const ProductEditForm: React.FC<ProductEditFormProps> = ({
         stock: data.stock,
         status: data.status,
         image_url,
+        sku: product.sku // Preserve the existing SKU
       };
       
       await updateProduct.mutateAsync(updatedProductData);

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,23 +21,27 @@ export const useProducts = () => {
       }
 
       // Add status field and a default SKU if not present
-      return data.map(product => ({ 
-        ...product, 
-        status: "published" as "published" | "draft",
-        sku: product.sku || `PRD-${product.id.substring(0, 8).toUpperCase()}` 
-      }));
+      return data.map(product => {
+        // Cast the product to include the sku field even though it may not exist in DB
+        const typedProduct = product as any;
+        return { 
+          ...typedProduct, 
+          status: "published" as "published" | "draft",
+          sku: typedProduct.sku || `PRD-${typedProduct.id.substring(0, 8).toUpperCase()}`
+        };
+      });
     },
   });
 
   // Create a new product
   const createProduct = useMutation({
     mutationFn: async (newProduct: Omit<Product, "id" | "created_at" | "updated_at">) => {
+      // Remove sku from the payload since it doesn't exist in the database yet
+      const { sku, ...productToInsert } = newProduct;
+      
       const { data, error } = await supabase
         .from("products")
-        .insert([{
-          ...newProduct,
-          sku: newProduct.sku || `PRD-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-        }])
+        .insert([productToInsert])
         .select()
         .single();
 
@@ -45,10 +50,11 @@ export const useProducts = () => {
       }
 
       // Add status and SKU to the returned product
+      const typedData = data as any;
       return { 
-        ...data, 
+        ...typedData, 
         status: "published" as "published" | "draft",
-        sku: data.sku || `PRD-${data.id.substring(0, 8).toUpperCase()}`
+        sku: sku || `PRD-${typedData.id.substring(0, 8).toUpperCase()}`
       };
     },
     onSuccess: () => {
@@ -65,15 +71,12 @@ export const useProducts = () => {
     mutationFn: async (updatedProduct: Partial<Product> & { id: string }) => {
       const { id, ...rest } = updatedProduct;
       
-      // Remove status field before sending to Supabase since it doesn't exist in the DB
+      // Remove status and sku fields before sending to Supabase since they don't exist in the DB
       const { status, sku, ...dataToUpdate } = rest;
 
       const { data, error } = await supabase
         .from("products")
-        .update({
-          ...dataToUpdate,
-          sku: sku || `PRD-${id.substring(0, 8).toUpperCase()}`
-        })
+        .update(dataToUpdate)
         .eq("id", id)
         .select()
         .single();
@@ -83,10 +86,11 @@ export const useProducts = () => {
       }
 
       // Add status and SKU to the returned product
+      const typedData = data as any;
       return { 
-        ...data, 
+        ...typedData, 
         status: status || "published" as "published" | "draft",
-        sku: data.sku || `PRD-${data.id.substring(0, 8).toUpperCase()}`
+        sku: sku || `PRD-${typedData.id.substring(0, 8).toUpperCase()}`
       };
     },
     onSuccess: () => {
@@ -113,7 +117,12 @@ export const useProducts = () => {
       }
       
       // Add status to the returned product
-      return { ...data, status: "published" as "published" | "draft" };
+      const typedData = data as any;
+      return { 
+        ...typedData, 
+        status: "published" as "published" | "draft",
+        sku: typedData.sku || `PRD-${id.substring(0, 8).toUpperCase()}`
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
