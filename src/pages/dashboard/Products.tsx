@@ -3,17 +3,29 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Package, 
-  Search, 
+import {
+  Package,
+  Search,
   Plus,
   Filter,
   Grid3X3,
   List,
-  Loader2
+  Loader2,
+  Edit,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { ProductForm } from "@/components/products/ProductForm";
+import { ProductEditForm } from "@/components/products/ProductEditForm";
+import { DeleteProductConfirmation } from "@/components/products/DeleteProductConfirmation";
+import { Product } from "@/types/product";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Products: React.FC = () => {
   // Get products data from Supabase
@@ -28,6 +40,14 @@ const Products: React.FC = () => {
   // State for search query
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  // State for edit product
+  const [editProductOpen, setEditProductOpen] = React.useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+
+  // State for delete product confirmation
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [productToDelete, setProductToDelete] = React.useState<{ id: string; name: string } | null>(null);
+
   // Filter products based on search query
   const filteredProducts = React.useMemo(() => {
     if (!products || products.length === 0) return [];
@@ -41,6 +61,18 @@ const Products: React.FC = () => {
       product.description?.toLowerCase().includes(query)
     );
   }, [products, searchQuery]);
+
+  // Handle edit product
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setEditProductOpen(true);
+  };
+
+  // Handle delete product
+  const handleDeleteProduct = (id: string, name: string) => {
+    setProductToDelete({ id, name });
+    setDeleteDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -141,7 +173,7 @@ const Products: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
                   {product.image_url ? (
                     <img 
                       src={product.image_url} 
@@ -151,6 +183,30 @@ const Products: React.FC = () => {
                   ) : (
                     <Package className="w-12 h-12 text-gray-300" />
                   )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm hover:bg-white"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>تعديل</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteProduct(product.id, product.name)}
+                        className="text-red-500 focus:text-red-500"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>حذف</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold">{product.name}</h3>
@@ -179,11 +235,12 @@ const Products: React.FC = () => {
                   <th className="py-2 text-right text-sm font-semibold">الفئة</th>
                   <th className="py-2 text-right text-sm font-semibold">المخزون</th>
                   <th className="py-2 text-right text-sm font-semibold">الحالة</th>
+                  <th className="py-2 text-right text-sm font-semibold">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 transition-colors cursor-pointer border-b">
+                  <tr key={product.id} className="hover:bg-gray-50 transition-colors border-b">
                     <td className="py-3">
                       <div className="flex items-center">
                         <div className="w-10 h-10 mr-3 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
@@ -213,6 +270,26 @@ const Products: React.FC = () => {
                         {product.status === 'published' ? 'منشور' : 'مسودة'}
                       </span>
                     </td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEditProduct(product)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-600"
+                          onClick={() => handleDeleteProduct(product.id, product.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -225,6 +302,21 @@ const Products: React.FC = () => {
       <ProductForm 
         open={productFormOpen}
         onOpenChange={setProductFormOpen}
+      />
+
+      {/* Edit Product Dialog */}
+      <ProductEditForm
+        open={editProductOpen}
+        onOpenChange={setEditProductOpen}
+        product={selectedProduct}
+      />
+
+      {/* Delete Product Confirmation Dialog */}
+      <DeleteProductConfirmation
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        productId={productToDelete?.id || null}
+        productName={productToDelete?.name || null}
       />
     </div>
   );
