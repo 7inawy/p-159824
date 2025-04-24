@@ -293,6 +293,97 @@ export type Database = {
         }
         Relationships: []
       }
+      store_blocks: {
+        Row: {
+          block_order: number
+          block_type: string
+          content: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          block_order: number
+          block_type: string
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          block_order?: number
+          block_type?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_blocks_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_themes: {
+        Row: {
+          accent_color: string
+          button_radius: number
+          button_style: string
+          created_at: string
+          font_family: string
+          id: string
+          is_dark_mode: boolean
+          primary_color: string
+          secondary_color: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          button_radius?: number
+          button_style?: string
+          created_at?: string
+          font_family?: string
+          id?: string
+          is_dark_mode?: boolean
+          primary_color?: string
+          secondary_color?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          button_radius?: number
+          button_style?: string
+          created_at?: string
+          font_family?: string
+          id?: string
+          is_dark_mode?: boolean
+          primary_color?: string
+          secondary_color?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_themes_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           created_at: string | null
