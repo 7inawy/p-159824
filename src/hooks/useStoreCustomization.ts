@@ -81,14 +81,21 @@ export function useStoreCustomization(storeId: string) {
 
   // Update block order
   const updateBlockOrder = useMutation({
-    mutationFn: async (blocks: { id: string; block_order: number }[]) => {
+    mutationFn: async (updatedBlocks: { id: string; block_order: number; block_type: string }[]) => {
+      // Prepare data for upsert with all required fields
+      const blocksToUpdate = updatedBlocks.map(block => ({
+        id: block.id,
+        block_order: block.block_order,
+        block_type: block.block_type,
+        store_id: storeId,
+        // Adding default values for other required fields if they're not present in existing data
+        content: {},
+        is_active: true
+      }));
+
       const { error } = await supabase
         .from("store_blocks")
-        .upsert(blocks.map(({ id, block_order }) => ({
-          id,
-          block_order,
-          store_id: storeId
-        })));
+        .upsert(blocksToUpdate, { onConflict: 'id' });
 
       if (error) throw error;
     },

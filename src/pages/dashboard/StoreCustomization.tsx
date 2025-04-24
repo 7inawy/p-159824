@@ -11,7 +11,7 @@ const StoreCustomization: React.FC = () => {
   // For demo purposes, we're using a hardcoded store ID
   // In a real app, this would come from the authenticated user's context
   const storeId = "demo-store";
-  const { theme, isLoading, updateTheme } = useStoreCustomization(storeId);
+  const { theme, blocks, isLoading, updateTheme, updateBlockOrder } = useStoreCustomization(storeId);
 
   const handlePreviewStore = () => {
     // This would open the store in a new tab
@@ -20,6 +20,20 @@ const StoreCustomization: React.FC = () => {
 
   const handlePublishChanges = () => {
     toast.info("هذه الميزة قيد التطوير");
+  };
+
+  // Example function to reorder blocks (this would be called from a drag-and-drop interface)
+  const handleReorderBlocks = () => {
+    if (!blocks) return;
+    
+    // This is an example - in a real implementation this would be called after drag-and-drop
+    const updatedBlocks = blocks.map((block, index) => ({
+      id: block.id,
+      block_order: index,
+      block_type: block.block_type // Include the block_type which is required
+    }));
+    
+    updateBlockOrder.mutate(updatedBlocks);
   };
 
   if (isLoading) {
