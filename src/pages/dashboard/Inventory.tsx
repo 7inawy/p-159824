@@ -1,9 +1,20 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { PackageCheck, Filter, Search, AlertTriangle } from "lucide-react";
+import { PackageCheck, Filter, Search, AlertTriangle, PlusCircle, MinusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useProducts } from "@/hooks/useProducts";
+import { useInventory } from "@/hooks/useInventory";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+const inventoryActionSchema = z.object({
+  quantity: z.number().min(1, "الكمية يجب أن تكون رقم موجب"),
+  reason: z.string().optional()
+});
 
 const Inventory: React.FC = () => {
   // Sample inventory data
@@ -18,6 +29,41 @@ const Inventory: React.FC = () => {
     { id: "PRD1008", name: "سماعات لاسلكية", sku: "ELC-001", stock: 1, reorderLevel: 5, status: "low-stock" },
     { id: "PRD1009", name: "حذاء رياضي أحمر", sku: "SHO-002", stock: 0, reorderLevel: 5, status: "out-of-stock" }
   ];
+
+  const { products } = useProducts();
+  const { updateInventory } = useInventory();
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [inventoryAction, setInventoryAction] = useState<"restock" | "remove">("restock");
+
+  const form = useForm<z.infer<typeof inventoryActionSchema>>({
+    resolver: zodResolver(inventoryActionSchema),
+    defaultValues: {
+      quantity: 1,
+      reason: ""
+    }
+  });
+
+  const handleInventoryAction = (values: z.infer<typeof inventoryActionSchema>) => {
+    if (!selectedProduct) return;
+
+    updateInventory.mutate({
+      product_id: selectedProduct,
+      action: inventoryAction,
+      quantity: values.quantity,
+      previous_stock: products?.find(p => p.id === selectedProduct)?.stock || 0,
+      new_stock: 0, // This will be calculated in the mutation
+      reason: values.reason
+    });
+
+    form.reset();
+    setSelectedProduct(null);
+  };
+
+  const calculateStockStatus = (stock: number, reorderLevel: number) => {
+    if (stock === 0) return "out-of-stock";
+    if (stock <= reorderLevel) return "low-stock";
+    return "in-stock";
+  };
 
   return (
     <div className="space-y-6">
@@ -89,7 +135,7 @@ const Inventory: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Inventory Table */}
+      {/* Inventory Table with Action Button */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -102,21 +148,93 @@ const Inventory: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {inventory.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50 transition-colors cursor-pointer border-b">
+            {products?.map((item) => (
+              <tr 
+                key={item.id} 
+                className="hover:bg-gray-50 transition-colors cursor-pointer border-b"
+              >
                 <td className="py-3 text-sm font-medium">{item.name}</td>
                 <td className="py-3 text-sm text-gray-500">{item.sku}</td>
                 <td className="py-3 text-sm">{item.stock}</td>
-                <td className="py-3 text-sm">{item.reorderLevel}</td>
+                <td className="py-3 text-sm">{item.reorder_level}</td>
                 <td className="py-3 text-sm">
                   <span className={`px-2 py-1 text-xs rounded-full ${
-                    item.status === 'in-stock' ? 'bg-green-100 text-green-800' :
-                    item.status === 'low-stock' ? 'bg-yellow-100 text-yellow-800' :
+                    calculateStockStatus(item.stock, item.reorder_level) === 'in-stock' ? 'bg-green-100 text-green-800' :
+                    calculateStockStatus(item.stock, item.reorder_level) === 'low-stock' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-red-100 text-red-800'
                   }`}>
-                    {item.status === 'in-stock' ? 'متوفر' :
-                     item.status === 'low-stock' ? 'مخزون منخفض' : 'غير متوفر'}
+                    {calculateStockStatus(item.stock, item.reorder_level) === 'in-stock' ? 'متوفر' :
+                     calculateStockStatus(item.stock, item.reorder_level) === 'low-stock' ? 'مخزون منخفض' : 'غير متوفر'}
                   </span>
+                </td>
+                <td>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedProduct(item.id)}
+                      >
+                        <PlusCircle className="w-4 h-4 ml-2" /> إضافة
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>تحديث مخزون {item.name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex gap-2 mb-4">
+                        <Button 
+                          variant={inventoryAction === "restock" ? "default" : "outline"}
+                          onClick={() => setInventoryAction("restock")}
+                        >
+                          <PlusCircle className="w-4 h-4 ml-2" /> إضافة مخزون
+                        </Button>
+                        <Button 
+                          variant={inventoryAction === "remove" ? "destructive" : "outline"}
+                          onClick={() => setInventoryAction("remove")}
+                        >
+                          <MinusCircle className="w-4 h-4 ml-2" /> تخفيض مخزون
+                        </Button>
+                      </div>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleInventoryAction)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="quantity"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>الكمية</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="reason"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>سبب التحديث (اختياري)</FormLabel>
+                                <FormControl>
+                                  <Input type="text" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" className="w-full">
+                            تأكيد التحديث
+                          </Button>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
                 </td>
               </tr>
             ))}

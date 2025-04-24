@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      inventory_history: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_stock: number
+          previous_stock: number
+          product_id: string
+          quantity: number
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_stock: number
+          previous_stock: number
+          product_id: string
+          quantity: number
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_stock?: number
+          previous_stock?: number
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -136,6 +180,7 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
+          reorder_level: number
           retailer_id: string | null
           stock: number
           updated_at: string | null
@@ -148,6 +193,7 @@ export type Database = {
           image_url?: string | null
           name: string
           price: number
+          reorder_level?: number
           retailer_id?: string | null
           stock?: number
           updated_at?: string | null
@@ -160,6 +206,7 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          reorder_level?: number
           retailer_id?: string | null
           stock?: number
           updated_at?: string | null
