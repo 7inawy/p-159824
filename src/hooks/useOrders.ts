@@ -15,7 +15,7 @@ export type Order = {
   items_count: number;
 };
 
-export type OrderWithItems = Order & {
+export type OrderWithItems = Omit<Order, 'items_count'> & {
   items: {
     id: string;
     product_id: string;
@@ -92,7 +92,11 @@ export const useOrders = () => {
 
         // Format the order with items
         const orderWithItems: OrderWithItems = {
-          ...order,
+          id: order.id,
+          customer_id: order.customer_id,
+          status: order.status as OrderStatus,
+          created_at: order.created_at,
+          total: order.total,
           items: items.map(item => ({
             id: item.id,
             product_id: item.product_id || "",

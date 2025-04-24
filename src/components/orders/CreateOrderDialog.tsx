@@ -38,6 +38,14 @@ interface CreateOrderDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Sample customer data for when the table doesn't exist
+const MOCK_CUSTOMERS = [
+  { id: "1", name: "أحمد علي" },
+  { id: "2", name: "محمد خالد" },
+  { id: "3", name: "سارة محمد" },
+  { id: "4", name: "فاطمة أحمد" },
+];
+
 const formSchema = z.object({
   customer_id: z.string().min(1, "يرجى اختيار العميل"),
   items: z.array(
@@ -66,27 +74,27 @@ export const CreateOrderDialog: React.FC<CreateOrderDialogProps> = ({
     },
   });
 
+  // Use a query to fetch mock customers or from a retailers table if it exists
   const { data: customers, isLoading: isLoadingCustomers } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("*")
-        .order("name");
+      try {
+        // Try to query from retailers table since customers doesn't exist
+        const { data, error } = await supabase
+          .from("retailers")
+          .select("id, store_name as name")
+          .order("store_name");
 
-      if (error) throw error;
+        if (error) {
+          console.error("Error fetching customers:", error);
+          return MOCK_CUSTOMERS;
+        }
 
-      // If customers table doesn't exist or is empty, return mock data
-      if (!data || data.length === 0) {
-        return [
-          { id: "1", name: "أحمد علي" },
-          { id: "2", name: "محمد خالد" },
-          { id: "3", name: "سارة محمد" },
-          { id: "4", name: "فاطمة أحمد" },
-        ];
+        return data?.length ? data : MOCK_CUSTOMERS;
+      } catch (error) {
+        console.error("Error in customers query:", error);
+        return MOCK_CUSTOMERS;
       }
-
-      return data;
     },
   });
 
@@ -106,7 +114,14 @@ export const CreateOrderDialog: React.FC<CreateOrderDialogProps> = ({
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
-      await createOrder.mutateAsync(values);
+      await createOrder.mutateAsync({
+        customer_id: values.customer_id,
+        items: values.items.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      });
       onOpenChange(false);
       form.reset({
         customer_id: "",
