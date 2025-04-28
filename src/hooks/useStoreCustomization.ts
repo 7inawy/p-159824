@@ -24,6 +24,17 @@ export interface StoreBlock {
   is_active: boolean;
 }
 
+export interface ThemeVersion {
+  id: string;
+  store_id: string;
+  name: string;
+  is_live: boolean;
+  created_at: string;
+  updated_at: string;
+  blocks_data?: StoreBlock[];
+  theme_data?: StoreTheme;
+}
+
 export function useStoreCustomization(storeId: string) {
   const queryClient = useQueryClient();
 
@@ -54,6 +65,21 @@ export function useStoreCustomization(storeId: string) {
 
       if (error) throw error;
       return data as StoreBlock[];
+    },
+  });
+
+  // Fetch theme versions
+  const { data: versions, isLoading: areVersionsLoading } = useQuery({
+    queryKey: ["storeVersions", storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_theme_versions")
+        .select("*")
+        .eq("store_id", storeId)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      return data as ThemeVersion[];
     },
   });
 
@@ -179,15 +205,151 @@ export function useStoreCustomization(storeId: string) {
     }
   });
 
+  // Save a new theme version
+  const saveThemeVersion = useMutation({
+    mutationFn: async ({ name, blocks, theme }: { name: string, blocks: StoreBlock[], theme: StoreTheme }) => {
+      const versionData = {
+        store_id: storeId,
+        name,
+        blocks_data: blocks,
+        theme_data: theme,
+        is_live: false
+      };
+
+      const { data, error } = await supabase
+        .from("store_theme_versions")
+        .insert([versionData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
+      toast.success("تم حفظ نسخة التصميم بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في حفظ نسخة التصميم: ${error.message}`);
+    },
+  });
+
+  // Load a theme version
+  const loadThemeVersion = useMutation({
+    mutationFn: async (versionId: string) => {
+      const { data, error } = await supabase
+        .from("store_theme_versions")
+        .select("*")
+        .eq("id", versionId)
+        .single();
+
+      if (error) throw error;
+      
+      const version = data as ThemeVersion;
+      
+      if (version.blocks_data) {
+        // Delete existing blocks
+        await supabase
+          .from("store_blocks")
+          .delete()
+          .eq("store_id", storeId);
+          
+        // Insert new blocks
+        const blocksToInsert = version.blocks_data.map((block: any) => ({
+          ...block,
+          id: undefined, // Let Supabase generate a new ID
+          store_id: storeId
+        }));
+        
+        if (blocksToInsert.length > 0) {
+          await supabase
+            .from("store_blocks")
+            .insert(blocksToInsert);
+        }
+      }
+      
+      if (version.theme_data) {
+        // Update theme
+        await supabase
+          .from("store_themes")
+          .update(version.theme_data)
+          .eq("store_id", storeId);
+      }
+      
+      return version;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeTheme", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["storeBlocks", storeId] });
+      toast.success("تم تحميل نسخة التصميم بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في تحميل نسخة التصميم: ${error.message}`);
+    },
+  });
+
+  // Set a theme version as live
+  const setLiveVersion = useMutation({
+    mutationFn: async (versionId: string) => {
+      // First, set all versions as not live
+      await supabase
+        .from("store_theme_versions")
+        .update({ is_live: false })
+        .eq("store_id", storeId);
+      
+      // Then set the selected version as live
+      const { data, error } = await supabase
+        .from("store_theme_versions")
+        .update({ is_live: true })
+        .eq("id", versionId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
+      toast.success("تم تفعيل نسخة التصميم بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في تفعيل نسخة التصميم: ${error.message}`);
+    },
+  });
+
+  // Delete a theme version
+  const deleteThemeVersion = useMutation({
+    mutationFn: async (versionId: string) => {
+      const { error } = await supabase
+        .from("store_theme_versions")
+        .delete()
+        .eq("id", versionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
+      toast.success("تم حذف نسخة التصميم بنجاح");
+    },
+    onError: (error: Error) => {
+      toast.error(`فشل في حذف نسخة التصميم: ${error.message}`);
+    },
+  });
+
   return {
     theme,
     blocks,
-    isLoading: isThemeLoading || areBlocksLoading,
+    versions,
+    isLoading: isThemeLoading || areBlocksLoading || areVersionsLoading,
     updateTheme,
     createBlock,
     updateBlock,
     deleteBlock,
     updateBlockOrder,
     updateBlocks,
+    saveThemeVersion,
+    loadThemeVersion,
+    setLiveVersion,
+    deleteThemeVersion,
   };
 }

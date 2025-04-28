@@ -1,4 +1,6 @@
 
+// Helper functions for block management
+
 export function getBlockTypeName(blockType: string): string {
   const blockTypes: Record<string, string> = {
     hero: "قسم الدعوة للعمل (Hero)",

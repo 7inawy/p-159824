@@ -1,13 +1,15 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Palette, Layers, Layout, EyeIcon } from "lucide-react";
+import { Palette, Layers, Layout, EyeIcon, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStoreCustomization } from "@/hooks/useStoreCustomization";
 import { ThemeControls } from "@/components/store-customization/ThemeControls";
 import { BlockManager } from "@/components/store-customization/BlockManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlockPreview } from "@/components/store-customization/BlockPreview";
+import { ThemeVersions } from "@/components/store-customization/ThemeVersions";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 
 const StoreCustomization: React.FC = () => {
@@ -17,12 +19,18 @@ const StoreCustomization: React.FC = () => {
   const { 
     theme, 
     blocks, 
+    versions,
     isLoading, 
     updateTheme, 
-    updateBlocks 
+    updateBlocks,
+    saveThemeVersion,
+    loadThemeVersion,
+    setLiveVersion,
+    deleteThemeVersion
   } = useStoreCustomization(storeId);
   
   const [activeTab, setActiveTab] = useState("blocks");
+  const [currentVersionId, setCurrentVersionId] = useState<string | null>(null);
   
   const handlePreviewStore = () => {
     // This would open the store in a new tab
@@ -37,6 +45,31 @@ const StoreCustomization: React.FC = () => {
     updateBlocks.mutate(updatedBlocks);
   };
 
+  const handleSaveVersion = (name: string) => {
+    if (!theme || !blocks) return;
+    
+    saveThemeVersion.mutate(
+      { 
+        name, 
+        blocks, 
+        theme 
+      },
+      {
+        onSuccess: (data) => {
+          setCurrentVersionId(data.id);
+        }
+      }
+    );
+  };
+
+  const handleLoadVersion = (versionId: string) => {
+    loadThemeVersion.mutate(versionId, {
+      onSuccess: () => {
+        setCurrentVersionId(versionId);
+      }
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -47,6 +80,9 @@ const StoreCustomization: React.FC = () => {
       </div>
     );
   }
+
+  // Show empty state if no blocks and not in theme tab
+  const showEmptyState = (!blocks || blocks.length === 0) && activeTab !== "theme";
 
   return (
     <div className="space-y-6">
@@ -80,6 +116,10 @@ const StoreCustomization: React.FC = () => {
             <Palette className="w-4 h-4 mr-2" />
             التصميم
           </TabsTrigger>
+          <TabsTrigger value="versions" className="flex items-center">
+            <Save className="w-4 h-4 mr-2" />
+            النسخ
+          </TabsTrigger>
           <TabsTrigger value="preview" className="flex items-center">
             <EyeIcon className="w-4 h-4 mr-2" />
             المعاينة
@@ -87,7 +127,18 @@ const StoreCustomization: React.FC = () => {
         </TabsList>
         
         <TabsContent value="blocks" className="mt-6">
-          {blocks && (
+          {showEmptyState ? (
+            <EmptyState
+              title="لا توجد عناصر حالياً"
+              description="قم بإضافة عناصر لتخصيص صفحة متجرك الرئيسية"
+              icon={<Layers className="w-12 h-12 text-muted-foreground" />}
+              actionLabel="إضافة عنصر جديد"
+              actionFn={() => {
+                // The BlockManager will handle adding the first block
+                setActiveTab("blocks");
+              }}
+            />
+          ) : blocks && (
             <BlockManager 
               blocks={blocks} 
               onBlocksUpdate={handleUpdateBlocks} 
@@ -106,6 +157,23 @@ const StoreCustomization: React.FC = () => {
           )}
         </TabsContent>
         
+        <TabsContent value="versions" className="mt-6">
+          <ThemeVersions
+            versions={versions || []}
+            currentVersionId={currentVersionId}
+            onSaveVersion={handleSaveVersion}
+            onLoadVersion={handleLoadVersion}
+            onDeleteVersion={deleteThemeVersion.mutate}
+            onSetLiveVersion={setLiveVersion.mutate}
+            isLoading={
+              saveThemeVersion.isPending || 
+              loadThemeVersion.isPending || 
+              deleteThemeVersion.isPending || 
+              setLiveVersion.isPending
+            }
+          />
+        </TabsContent>
+        
         <TabsContent value="preview" className="mt-6">
           <Card>
             <CardHeader>
@@ -113,7 +181,11 @@ const StoreCustomization: React.FC = () => {
             </CardHeader>
             <CardContent className="p-0 overflow-hidden rounded-b-lg">
               <div className="border-t p-4 bg-background">
-                {blocks && theme && (
+                {showEmptyState ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    لا توجد عناصر للمعاينة. قم بإضافة عناصر أولاً.
+                  </div>
+                ) : blocks && theme && (
                   <div className="border rounded-lg overflow-hidden">
                     <BlockPreview blocks={blocks} theme={theme} />
                   </div>
