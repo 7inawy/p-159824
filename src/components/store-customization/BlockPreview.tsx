@@ -9,6 +9,7 @@ import { NewsletterBlock } from "./blocks/NewsletterBlock";
 import { CustomHtmlBlock } from "./blocks/CustomHtmlBlock";
 import { VideoBlock } from "./blocks/VideoBlock";
 import { InstagramBlock } from "./blocks/InstagramBlock";
+import { getDefaultContentForBlockType } from "@/utils/blockHelpers";
 
 interface BlockPreviewProps {
   blocks: StoreBlock[];
@@ -18,24 +19,28 @@ interface BlockPreviewProps {
 export function BlockPreview({ blocks, theme }: BlockPreviewProps) {
   const renderBlock = (block: StoreBlock) => {
     if (!block.is_active) return null;
+    
+    // Make sure the content is properly typed with defaults from blockHelpers if needed
+    const defaultContent = getDefaultContentForBlockType(block.block_type);
+    const content = { ...defaultContent, ...block.content };
 
     switch (block.block_type) {
       case "hero":
-        return <HeroBlock key={block.id} content={block.content} theme={theme} />;
+        return <HeroBlock key={block.id} content={content} theme={theme} />;
       case "productGrid":
-        return <ProductGridBlock key={block.id} content={block.content} theme={theme} />;
+        return <ProductGridBlock key={block.id} content={content} theme={theme} />;
       case "testimonials":
-        return <TestimonialsBlock key={block.id} content={block.content} theme={theme} />;
+        return <TestimonialsBlock key={block.id} content={content} theme={theme} />;
       case "categoryBanner":
-        return <CategoryBannerBlock key={block.id} content={block.content} theme={theme} />;
+        return <CategoryBannerBlock key={block.id} content={content} theme={theme} />;
       case "newsletter":
-        return <NewsletterBlock key={block.id} content={block.content} theme={theme} />;
+        return <NewsletterBlock key={block.id} content={content} theme={theme} />;
       case "customHtml":
-        return <CustomHtmlBlock key={block.id} content={block.content} theme={theme} />;
+        return <CustomHtmlBlock key={block.id} content={content} theme={theme} />;
       case "video":
-        return <VideoBlock key={block.id} content={block.content} theme={theme} />;
+        return <VideoBlock key={block.id} content={content} theme={theme} />;
       case "instagram":
-        return <InstagramBlock key={block.id} content={block.content} theme={theme} />;
+        return <InstagramBlock key={block.id} content={content} theme={theme} />;
       default:
         return (
           <div key={block.id} className="p-4 border border-dashed text-center text-muted-foreground">
