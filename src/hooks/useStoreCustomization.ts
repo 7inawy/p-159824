@@ -72,15 +72,15 @@ export function useStoreCustomization(storeId: string) {
   const { data: versions, isLoading: areVersionsLoading } = useQuery({
     queryKey: ["storeVersions", storeId],
     queryFn: async () => {
-      // Use type assertion to handle the store_theme_versions table
       const { data, error } = await supabase
-        .from("store_theme_versions" as any)
+        .from("store_theme_versions")
         .select("*")
         .eq("store_id", storeId)
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
-      return data as ThemeVersion[];
+      // Use a more explicit type assertion to handle any data conversion issues
+      return (data || []) as unknown as ThemeVersion[];
     },
   });
 
@@ -217,15 +217,14 @@ export function useStoreCustomization(storeId: string) {
         is_live: false
       };
 
-      // Use type assertion to handle the store_theme_versions table
       const { data, error } = await supabase
-        .from("store_theme_versions" as any)
+        .from("store_theme_versions")
         .insert([versionData])
         .select()
         .single();
 
       if (error) throw error;
-      return data as ThemeVersion;
+      return data as unknown as ThemeVersion;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
@@ -239,16 +238,15 @@ export function useStoreCustomization(storeId: string) {
   // Load a theme version
   const loadThemeVersion = useMutation({
     mutationFn: async (versionId: string) => {
-      // Use type assertion to handle the store_theme_versions table
       const { data, error } = await supabase
-        .from("store_theme_versions" as any)
+        .from("store_theme_versions")
         .select("*")
         .eq("id", versionId)
         .single();
 
       if (error) throw error;
       
-      const version = data as ThemeVersion;
+      const version = data as unknown as ThemeVersion;
       
       if (version.blocks_data) {
         // Delete existing blocks
@@ -296,20 +294,20 @@ export function useStoreCustomization(storeId: string) {
     mutationFn: async (versionId: string) => {
       // First, set all versions as not live
       await supabase
-        .from("store_theme_versions" as any)
+        .from("store_theme_versions")
         .update({ is_live: false })
         .eq("store_id", storeId);
       
       // Then set the selected version as live
       const { data, error } = await supabase
-        .from("store_theme_versions" as any)
+        .from("store_theme_versions")
         .update({ is_live: true })
         .eq("id", versionId)
         .select()
         .single();
 
       if (error) throw error;
-      return data as ThemeVersion;
+      return data as unknown as ThemeVersion;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
@@ -324,7 +322,7 @@ export function useStoreCustomization(storeId: string) {
   const deleteThemeVersion = useMutation({
     mutationFn: async (versionId: string) => {
       const { error } = await supabase
-        .from("store_theme_versions" as any)
+        .from("store_theme_versions")
         .delete()
         .eq("id", versionId);
 
