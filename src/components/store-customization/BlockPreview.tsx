@@ -16,6 +16,61 @@ interface BlockPreviewProps {
   theme?: any; // Optional theme prop for applying theme settings
 }
 
+// Define types for each block content
+interface HeroContent {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  buttonLink: string;
+  imageUrl: string;
+  alignment?: string;
+}
+
+interface ProductGridContent {
+  title: string;
+  productCount: number;
+  showPrices: boolean;
+}
+
+interface TestimonialsContent {
+  title: string;
+  testimonials: Array<{
+    name: string;
+    text: string;
+    image?: string;
+  }>;
+}
+
+interface CategoryBannerContent {
+  title: string;
+  categories: Array<{
+    name: string;
+    imageUrl: string;
+  }>;
+}
+
+interface NewsletterContent {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+}
+
+interface CustomHtmlContent {
+  html: string;
+}
+
+interface VideoContent {
+  title: string;
+  videoUrl: string;
+  autoplay: boolean;
+}
+
+interface InstagramContent {
+  title: string;
+  username: string;
+  postCount: number;
+}
+
 export function BlockPreview({ blocks, theme }: BlockPreviewProps) {
   const renderBlock = (block: StoreBlock) => {
     if (!block.is_active) return null;
@@ -23,61 +78,6 @@ export function BlockPreview({ blocks, theme }: BlockPreviewProps) {
     // Make sure the content is properly typed with defaults from blockHelpers
     const defaultContent = getDefaultContentForBlockType(block.block_type);
     const content = { ...defaultContent, ...block.content };
-
-    // Define the correct types for each block
-    type HeroContent = {
-      title: string;
-      subtitle: string;
-      buttonText: string;
-      buttonLink: string;
-      imageUrl: string;
-      alignment?: string;
-    };
-
-    type ProductGridContent = {
-      title: string;
-      productCount: number;
-      showPrices: boolean;
-    };
-
-    type TestimonialsContent = {
-      title: string;
-      testimonials: Array<{
-        name: string;
-        text: string;
-        image?: string;
-      }>;
-    };
-
-    type CategoryBannerContent = {
-      title: string;
-      categories: Array<{
-        name: string;
-        imageUrl: string;
-      }>;
-    };
-
-    type NewsletterContent = {
-      title: string;
-      subtitle: string;
-      buttonText: string;
-    };
-
-    type CustomHtmlContent = {
-      html: string;
-    };
-
-    type VideoContent = {
-      title: string;
-      videoUrl: string;
-      autoplay: boolean;
-    };
-
-    type InstagramContent = {
-      title: string;
-      username: string;
-      postCount: number;
-    };
 
     // Now render the appropriate block component based on block type
     switch (block.block_type) {
