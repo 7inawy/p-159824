@@ -9,7 +9,7 @@ interface CustomHtmlBlockProps {
 }
 
 export function CustomHtmlBlock({ content }: CustomHtmlBlockProps) {
-  // Ensure content.html exists before using dangerouslySetInnerHTML
+  // Ensure content.html exists with a default value if missing
   const html = content && content.html ? content.html : "<p>No HTML content provided</p>";
   
   return (

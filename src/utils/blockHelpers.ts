@@ -14,19 +14,6 @@ export function getBlockTypeName(blockType: string): string {
   return blockTypes[blockType] || blockType;
 }
 
-// Helper to generate a new block
-export function createNewBlock(blockType: string, storeId: string, order: number) {
-  return {
-    id: `temp-${Date.now()}`,
-    store_id: storeId,
-    block_type: blockType,
-    block_order: order,
-    content: getDefaultContentForBlockType(blockType),
-    is_active: true
-  };
-}
-
-// Default content for each block type
 export function getDefaultContentForBlockType(blockType: string): Record<string, any> {
   switch (blockType) {
     case "hero":

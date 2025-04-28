@@ -24,97 +24,116 @@ export function BlockPreview({ blocks, theme }: BlockPreviewProps) {
     const defaultContent = getDefaultContentForBlockType(block.block_type);
     const content = { ...defaultContent, ...block.content };
 
+    // Define the correct types for each block
+    type HeroContent = {
+      title: string;
+      subtitle: string;
+      buttonText: string;
+      buttonLink: string;
+      imageUrl: string;
+      alignment?: string;
+    };
+
+    type ProductGridContent = {
+      title: string;
+      productCount: number;
+      showPrices: boolean;
+    };
+
+    type TestimonialsContent = {
+      title: string;
+      testimonials: Array<{
+        name: string;
+        text: string;
+        image?: string;
+      }>;
+    };
+
+    type CategoryBannerContent = {
+      title: string;
+      categories: Array<{
+        name: string;
+        imageUrl: string;
+      }>;
+    };
+
+    type NewsletterContent = {
+      title: string;
+      subtitle: string;
+      buttonText: string;
+    };
+
+    type CustomHtmlContent = {
+      html: string;
+    };
+
+    type VideoContent = {
+      title: string;
+      videoUrl: string;
+      autoplay: boolean;
+    };
+
+    type InstagramContent = {
+      title: string;
+      username: string;
+      postCount: number;
+    };
+
     // Now render the appropriate block component based on block type
     switch (block.block_type) {
       case "hero":
         return <HeroBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            subtitle: string;
-            buttonText: string;
-            buttonLink: string;
-            imageUrl: string;
-            alignment?: string;
-          }} 
+          content={content as HeroContent} 
           theme={theme} 
         />;
         
       case "productGrid":
         return <ProductGridBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            productCount: number;
-            showPrices: boolean;
-          }} 
+          content={content as ProductGridContent} 
           theme={theme} 
         />;
         
       case "testimonials":
         return <TestimonialsBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            testimonials: Array<{
-              name: string;
-              text: string;
-              image?: string;
-            }>;
-          }} 
+          content={content as TestimonialsContent} 
           theme={theme} 
         />;
         
       case "categoryBanner":
         return <CategoryBannerBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            categories: Array<{
-              name: string;
-              imageUrl: string;
-            }>;
-          }} 
+          content={content as CategoryBannerContent} 
           theme={theme} 
         />;
         
       case "newsletter":
         return <NewsletterBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            subtitle: string;
-            buttonText: string;
-          }} 
+          content={content as NewsletterContent} 
           theme={theme} 
         />;
         
       case "customHtml":
         return <CustomHtmlBlock 
           key={block.id} 
-          content={content as { html: string }} 
+          content={content as CustomHtmlContent} 
           theme={theme} 
         />;
         
       case "video":
         return <VideoBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            videoUrl: string;
-            autoplay: boolean;
-          }} 
+          content={content as VideoContent} 
           theme={theme} 
         />;
         
       case "instagram":
         return <InstagramBlock 
           key={block.id} 
-          content={content as {
-            title: string;
-            username: string;
-            postCount: number;
-          }} 
+          content={content as InstagramContent} 
           theme={theme} 
         />;
         
