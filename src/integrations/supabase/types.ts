@@ -334,6 +334,39 @@ export type Database = {
           },
         ]
       }
+      store_theme_versions: {
+        Row: {
+          blocks_data: Json | null
+          created_at: string
+          id: string
+          is_live: boolean
+          name: string
+          store_id: string
+          theme_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          blocks_data?: Json | null
+          created_at?: string
+          id?: string
+          is_live?: boolean
+          name: string
+          store_id: string
+          theme_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          blocks_data?: Json | null
+          created_at?: string
+          id?: string
+          is_live?: boolean
+          name?: string
+          store_id?: string
+          theme_data?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_themes: {
         Row: {
           accent_color: string

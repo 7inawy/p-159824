@@ -72,8 +72,9 @@ export function useStoreCustomization(storeId: string) {
   const { data: versions, isLoading: areVersionsLoading } = useQuery({
     queryKey: ["storeVersions", storeId],
     queryFn: async () => {
+      // Use type assertion to handle the store_theme_versions table
       const { data, error } = await supabase
-        .from("store_theme_versions")
+        .from("store_theme_versions" as any)
         .select("*")
         .eq("store_id", storeId)
         .order("updated_at", { ascending: false });
@@ -216,14 +217,15 @@ export function useStoreCustomization(storeId: string) {
         is_live: false
       };
 
+      // Use type assertion to handle the store_theme_versions table
       const { data, error } = await supabase
-        .from("store_theme_versions")
+        .from("store_theme_versions" as any)
         .insert([versionData])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as ThemeVersion;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
@@ -237,8 +239,9 @@ export function useStoreCustomization(storeId: string) {
   // Load a theme version
   const loadThemeVersion = useMutation({
     mutationFn: async (versionId: string) => {
+      // Use type assertion to handle the store_theme_versions table
       const { data, error } = await supabase
-        .from("store_theme_versions")
+        .from("store_theme_versions" as any)
         .select("*")
         .eq("id", versionId)
         .single();
@@ -293,20 +296,20 @@ export function useStoreCustomization(storeId: string) {
     mutationFn: async (versionId: string) => {
       // First, set all versions as not live
       await supabase
-        .from("store_theme_versions")
+        .from("store_theme_versions" as any)
         .update({ is_live: false })
         .eq("store_id", storeId);
       
       // Then set the selected version as live
       const { data, error } = await supabase
-        .from("store_theme_versions")
+        .from("store_theme_versions" as any)
         .update({ is_live: true })
         .eq("id", versionId)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as ThemeVersion;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["storeVersions", storeId] });
@@ -321,7 +324,7 @@ export function useStoreCustomization(storeId: string) {
   const deleteThemeVersion = useMutation({
     mutationFn: async (versionId: string) => {
       const { error } = await supabase
-        .from("store_theme_versions")
+        .from("store_theme_versions" as any)
         .delete()
         .eq("id", versionId);
 
